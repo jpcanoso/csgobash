@@ -2,14 +2,14 @@
 # Never run this as r00t
 
 ### BEGIN INIT INFO
-# Provides:				csgo
+# Provides:			csgo
 # Required-Start:		$local_fs $remote_fs
 # Required-Stop:		$local_fs $remote_fs
 # Should-Start:			$network
 # Should-Stop:			$network
 # Default-Start:		2 3 4 5
 # Default-Stop:			0 1 6
-# Short-Description:	Start/stop CS:GO Server
+# Short-Description:		Start/stop CS:GO Server
 # Description:			Start/stop/restart/get the status of the CS:GO server in screen session
 ### END INIT INFO
 
@@ -17,10 +17,10 @@
 # Modified: by João Canoso <canoso[at]entreouvidos.pt>
 # reindented + minor corrections + work with CS:GO servers
 
-SERVICE="srcds_run" 						# used as identifier
-USERNAME="downas"  						# name of the user who will run the script
-csgoPATH="/home/downas/steamcmd/csgo"	# path to the aplication
-instanceName="csgoServer"				# name of the instance to the screen
+SERVICE="srcds_run" 				# used as identifier
+USERNAME="downas"  				# name of the user who will run the script
+csgoPATH="/home/downas/steamcmd/csgo"		# path to the aplication
+instanceName="csgoServer"			# name of the instance to the screen
 
 
 
@@ -74,12 +74,13 @@ csgo_stop() {
 	fi
 }
 
-# parses a command to CS:GO server
+# parses a command to CS:GO server, return the last line of the console log
 csgo_command() {
 	if isRunning
 	then
 		as_user "screen -p 0 -S $instanceName -X eval 'stuff \"$ARG\"\015'"
-		leep 1
+		sleep 1
+		awk '/./{line=$0} END{print line}' $csgoPATH/csgo/console.log
 	else
 		echo "That is not possible, $SERVICE is not running."
 	fi
