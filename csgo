@@ -1,0 +1,129 @@
+#!/bin/bash
+# Never run this as r00t
+
+### BEGIN INIT INFO
+# Provides:				csgo
+# Required-Start:		$local_fs $remote_fs
+# Required-Stop:		$local_fs $remote_fs
+# Should-Start:			$network
+# Should-Stop:			$network
+# Default-Start:		2 3 4 5
+# Default-Stop:			0 1 6
+# Short-Description:	Start/stop CS:GO Server
+# Description:			Start/stop/restart/get the status of the CS:GO server in screen session
+### END INIT INFO
+
+# Original Author: Lee Hutchinson <lee[at]bigdinosaur.org>
+# Modified: by João Canoso <canoso[at]entreouvidos.pt>
+# reindented + minor corrections + work with CS:GO servers
+
+SERVICE="srcds_run" 						# used as identifier
+USERNAME="downas"  						# name of the user who will run the script
+csgoPATH="/home/downas/steamcmd/csgo"	# path to the aplication
+instanceName="csgoServer"				# name of the instance to the screen
+
+
+
+# verify if the user who is running the script is the same as $USERNAME, if not, change user 
+as_user() {
+	if [ `whoami` == "$USERNAME" ] ; then
+		bash -c "$1"
+	else
+		su - $USERNAME -c "$1"
+	fi
+}
+
+# change directory and start the server
+csgo_start() {
+	if isRunning
+	then
+		echo "The $SERVICE was already running! It will not start."
+	else
+		echo "Starting the $SERVICE..."
+		as_user "cd $csgoPATH && screen -dmS $instanceName ./srcds_run -game csgo -console -usercon +game_type 0 +game_mode 1 +mapgroup mg_active +map de_dust2 -port 30000 -condebug"
+		# IF you have more server instances, add it here
+
+		sleep 7
+		if isRunning
+		then
+			echo "$SERVICE is now running."
+		else
+			echo "There was an error starting $SERVICE."
+		fi
+	fi
+}
+
+# stop the server
+csgo_stop() {
+	if isRunning
+	then
+    	echo "$SERVICE is running... stopping."
+		as_user "screen -p 0 -S $instanceName -X eval 'stuff \"say SERVER SHUTTING DOWN IN 5 SECONDS.\"\015'"
+		sleep 5
+		as_user "screen -p 0 -S $instanceName -X eval 'stuff \"exit\"\015'"
+		sleep 7
+
+		if isRunning
+		then
+			echo "$SERVICE could not be shut down... still running."
+		else
+			echo "$SERVICE is shut down."
+		fi
+	else
+		echo "$SERVICE was not running."
+	fi
+}
+
+# parses a command to CS:GO server
+csgo_command() {
+	if isRunning
+	then
+		as_user "screen -p 0 -S $instanceName -X eval 'stuff \"$ARG\"\015'"
+		leep 1
+	else
+		echo "That is not possible, $SERVICE is not running."
+	fi
+}
+
+# check if the server is running
+function isRunning {
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		return 1
+	else
+		return 0
+	fi
+}
+
+# check if screen is installed
+if [ ! -x `which screen` ]; then echo "ERROR: You need screen for this script (try apt-get install screen)"; exit 1; fi
+
+case "$1" in
+	start)
+		csgo_start
+	;;
+	stop)
+		csgo_stop
+	;;
+	restart)
+		csgo_stop
+		csgo_start
+	;;
+	command)
+		ARG="$2"
+		csgo_command
+	;;
+	status)
+		if isRunning
+		then
+			echo "$SERVICE is running."
+		else
+			echo "$SERVICE is not running."
+		fi
+	;;
+	*)
+		echo "Usage: /etc/init.d/csgo {start|stop|status|restart|command 1\"say hello world\"}"
+		exit 1
+	;;
+esac
+exit 0
