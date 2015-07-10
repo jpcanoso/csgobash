@@ -12,5 +12,9 @@ A very simple bash script to control a CS:GO server
 * screen - [apt-get install screen]
 
 ## Installation
-* copy and configure the script to /etc/init.d/
-* ´´´
+```console
+$ cd /etc/init.d/
+$ wget https://raw.githubusercontent.com/jpcanoso/csgobash/master/csgo
+$ chmod +x csgo
+$ update-rc.d csgo defaults
+```
