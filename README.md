@@ -18,3 +18,6 @@ $ wget https://raw.githubusercontent.com/jpcanoso/csgobash/master/csgo
 $ chmod +x csgo
 $ update-rc.d csgo defaults
 ```
+
+## TODO
+* Option to update the server easily
